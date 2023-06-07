@@ -24,10 +24,13 @@ build :: () {
 	compiler_begin_intercept(w);
 
     add_build_file(tprint("%/main.jai", #filepath), w);
+    add_build_file(tprint("%/utils.jai", #filepath), w);
     add_build_file(tprint("%/init.jai", #filepath), w);
+    add_build_file(tprint("%/input.jai", #filepath), w);
     add_build_file(tprint("%/camera.jai", #filepath), w);
 
     add_build_file(tprint("%/mesh.jai", #filepath), w);
+    add_build_file(tprint("%/primitives.jai", #filepath), w);
     add_build_file(tprint("%/parse_utils.jai", #filepath), w);
 
     add_build_file(tprint("%/render.jai", #filepath), w);
@@ -43,7 +46,7 @@ build :: () {
 		if !message continue;
 
 		if message.workspace == w {
-			//process_message(*ctags, message);
+			process_message(*ctags, message);
 		}
 
 		if message.kind == .COMPLETE break;

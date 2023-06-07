@@ -24,13 +24,12 @@ Camera :: struct
 	projection_matrix := Matrix4_Identity;
 }
 
-g_control_camera := true;
 update_flying_camera :: (using camera : *Camera, delta_time : float)
 {
 	mouse_delta : Vector2;
 	move_input  : Vector3;
 	move_speed  : float;
-	if g_control_camera
+	if settings.control_camera
 	{
         mouse_delta_x, mouse_delta_y : s32;
         mouse_button_delta := SDL_GetRelativeMouseState(*mouse_delta_x, *mouse_delta_y);
@@ -44,23 +43,25 @@ update_flying_camera :: (using camera : *Camera, delta_time : float)
 		move_input.z = cast(float)input.s - cast(float)input.w;
 		move_input = rotate(unit_vector(move_input), rotation);
 	}
+
+    // Position
 	position += move_input * move_speed;
 
     // Orientation
 	rotation_input = lerp(rotation_input, mouse_delta, ROTATION_SMOOTHING);
 	delta := rotation_input * ROTATION_SPEED;
-	euler_angles.x += delta.x * PI / 180.0;
-	euler_angles.y += delta.y * PI / 180.0;
-	euler_angles.y = clamp (euler_angles.y, -80.0  * PI / 180.0, 80.0 * PI / 180.0);
+	euler_angles.x += radians(delta.x);
+	euler_angles.y += radians(delta.y);
+	euler_angles.y = clamp(euler_angles.y, radians(-89.0), radians(89.0));
 	yaw : Quaternion;
-	// I am not sure why I need to invert the axis of rotation...
 	set_from_axis_and_angle(*yaw, 0, -1, 0, euler_angles.x);
 	pitch : Quaternion;
 	set_from_axis_and_angle(*pitch, -1, 0, 0, euler_angles.y);
 	rotation = yaw * pitch;
 
+    // Set Transforms
 	transform = make_translation_matrix4(position) * rotation_matrix(Matrix4, rotation);
 	view_matrix = inverse(transform);
 	aspect_ratio := window_width / cast(float)window_height;
-	projection_matrix = make_projection_matrix(fov * PI / 180.0, aspect_ratio, 0.1, 1000.0);
+	projection_matrix = make_projection_matrix(radians(fov), aspect_ratio, 0.1, 1000.0);
 }

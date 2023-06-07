@@ -3,6 +3,8 @@
 // Alex Hartford
 // June 2023
 
+MESH_VERSION :: 1;
+
 Vertex :: struct
 {
 	position : Vector3;
@@ -43,6 +45,9 @@ Skeleton :: struct
 	joints : [] Joint;	// Root joint is joints[0]
 }
 
+//
+//
+
 load_mesh_from_file :: (mesh : *Skinned_Mesh, filename : string) -> bool
 {
 	parse_joint :: (handler : *Text_File_Handler, mesh : *Skinned_Mesh, joint : *Skeleton.Joint) -> bool
@@ -79,18 +84,17 @@ load_mesh_from_file :: (mesh : *Skinned_Mesh, filename : string) -> bool
 	parse_vertex :: (handler : *Text_File_Handler, mesh : *Skinned_Mesh, vertex : *Vertex) -> bool
 	{
 		ok : bool;
-		vertex.position, ok = parse_vector3 (handler);
-		if !ok
-			return false;
-		vertex.normal, ok = parse_vector3 (handler);
-		if !ok
-			return false;
-		vertex.weights, ok = parse_vector3 (handler);
-		if !ok
-			return false;
-		vertex.joints, ok = parse_int_tuple (handler, 4, s16);
-		if !ok
-			return false;
+		vertex.position, ok = parse_vector3(handler);
+		if !ok return false;
+
+		vertex.normal, ok = parse_vector3(handler);
+		if !ok return false;
+
+		vertex.weights, ok = parse_vector3(handler);
+		if !ok return false;
+
+		vertex.joints, ok = parse_int_tuple(handler, 4, s16);
+		if !ok return false;
 
 		return true;
 	}
@@ -98,8 +102,8 @@ load_mesh_from_file :: (mesh : *Skinned_Mesh, filename : string) -> bool
 	parse_triangle :: (handler : *Text_File_Handler, mesh : *Skinned_Mesh, index : s64) -> bool
 	{
 		tri, ok := parse_int_tuple (handler, 3, u32);
-		if !ok
-			return false;
+		if !ok return false;
+
 		mesh.indices[index + 0] = tri[0];
 		mesh.indices[index + 1] = tri[1];
 		mesh.indices[index + 2] = tri[2];
@@ -107,32 +111,30 @@ load_mesh_from_file :: (mesh : *Skinned_Mesh, filename : string) -> bool
 	}
 
 	handler : Text_File_Handler;
-	defer deinit (*handler);
+	defer deinit(*handler);
 
 	found_slash, dir, basename := split_from_right (filename, #char "/");
 	if !found_slash then basename = filename;
-	start_file (*handler, basename, filename, optional = false);
-	if handler.failed
-		return false;
+	start_file(*handler, basename, filename, optional = false);
+	if handler.failed return false;
 
-	if handler.version != 1
-		return error_out (handler, "Invalid version number.");
+	if handler.version != MESH_VERSION
+		return error_out(handler, "Invalid version number.");
 
 	ok : bool;
 	mesh.joints.count, ok = parse_ident_and_int_line (*handler, "joint_count");
-	if !ok
-		return false;
+	if !ok return false;
+
 	if mesh.joints.count > MAX_JOINTS
 		return error_out (handler, "Too many joints (expected at most %, got %).", MAX_JOINTS, mesh.joints.count);
 
 	mesh.vertices.count, ok = parse_ident_and_int_line (*handler, "vertex_count");
-	if !ok
-		return false;
+	if !ok return false;
 
 	triangle_count : s64;
 	triangle_count, ok = parse_ident_and_int_line (*handler, "triangle_count");
-	if !ok
-		return false;
+	if !ok return false;
+
 	mesh.indices.count = triangle_count * 3;
 
 	// Allocate all the data in one batch, so everything is contiguous
@@ -153,7 +155,7 @@ load_mesh_from_file :: (mesh : *Skinned_Mesh, filename : string) -> bool
 	for * mesh.joints
 		if !parse_joint (*handler, mesh, it)
 			return error_out (handler, "Could not parse joint %.", it_index);
-	// Inverse all the bind transforms we calculated while parsing the joints
+	    // Inverse all the bind transforms we calculated while parsing the joints
 	for * mesh.joints
 		it.inverse_bind_transform = inverse (it.inverse_bind_transform);
 
@@ -174,8 +176,7 @@ load_mesh_from_file :: (mesh : *Skinned_Mesh, filename : string) -> bool
 			return error_out (handler, "Could not parse triangle %.", i);
 
 	line, found = consume_next_line (*handler);
-	if found
-		return error_out (handler, "Expected EOF.");
+	if found return error_out (handler, "Expected EOF.");
 
 	return true;
 }
@@ -185,9 +186,6 @@ load_mesh_from_file :: (mesh : *Skinned_Mesh, filename : string) -> bool
 
 init_mesh_rendering_objects :: (using mesh : *Skinned_Mesh)
 {
-    // We need a vertex buffer, that holds all our vertices, and an index
-    // buffer, that holds all of our indices. We also need a vertex array, that
-    // holds the information of the layout of our vertex buffer.
 	glGenVertexArrays(1, *vao);
 	glGenBuffers(1, *vbo);
 	glGenBuffers(1, *ibo);
@@ -195,11 +193,11 @@ init_mesh_rendering_objects :: (using mesh : *Skinned_Mesh)
 	defer glBindVertexArray(0);
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	defer glBindBuffer (GL_ARRAY_BUFFER, 0);
+	defer glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBufferData(GL_ARRAY_BUFFER, size_of(Vertex) * vertices.count, vertices.data, GL_STATIC_DRAW);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-	defer glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, 0);
+	defer glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, size_of(u32) * indices.count, indices.data, GL_STATIC_DRAW);
 
 	glEnableVertexAttribArray(0);
@@ -209,6 +207,6 @@ init_mesh_rendering_objects :: (using mesh : *Skinned_Mesh)
 	glEnableVertexAttribArray(2);
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, size_of(Vertex), cast(*void)(2 * size_of(Vector3)));
 	glEnableVertexAttribArray(3);
-	glVertexAttribIPointer(3, 4, GL_SHORT, size_of(Vertex), cast(*void) (3 * size_of(Vector3)));
+	glVertexAttribIPointer(3, 4, GL_SHORT, size_of(Vertex), cast(*void)(3 * size_of(Vector3)));
 }
 

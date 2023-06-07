@@ -3,32 +3,50 @@
 // Alex Hartford
 // June 2023
 
-render :: (mesh : Skinned_Mesh, basic_shader : Shader)
+render :: (mesh : Skinned_Mesh, line : Line, targets : Line, shader : Shader, basic_shader : Shader)
 {
     glViewport(0, 0, xx window_width, xx window_height);
     glClearColor(0.2, 0.3, 0.3, 1.0);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    use_shader(basic_shader);
     {
+        use_shader(shader);
+        defer disable_shaders();
+        set_mat4(shader, "projection", camera.projection_matrix);
+        set_mat4(shader, "view", camera.view_matrix);
+
+        set_vec4(shader, "color", Vector4.{1.0, 0.3, 0.2, 1.0});
+
+        model := Matrix4_Identity;
+        set_mat4(shader, "model", model);
+
+        draw_mesh(mesh, Matrix4_Identity, .[]);
+    }
+
+    {
+        use_shader(basic_shader);
+        defer disable_shaders();
         set_mat4(basic_shader, "projection", camera.projection_matrix);
         set_mat4(basic_shader, "view", camera.view_matrix);
 
         set_vec4(basic_shader, "color", Vector4.{1.0, 0.3, 0.2, 1.0});
-
         model := Matrix4_Identity;
         set_mat4(basic_shader, "model", model);
+        draw_line(line);
 
-        draw_mesh(mesh, Matrix4_Identity, .[]);
+        set_vec4(basic_shader, "color", Vector4.{0.3, 1.0, 0.2, 1.0});
+        draw_points(targets);
     }
-    glUseProgram(0);
 
     SDL_GL_SwapWindow(window);
 }
 
+//
+//
+
 draw_mesh :: (using mesh : Skinned_Mesh, model_matrix : Matrix4, skinning_matrices : []Matrix4)
 {
-	assert (skinning_matrices.count <= MAX_JOINTS, "Skinning matrices array cannot have more than % elements for now.");
+	assert(skinning_matrices.count <= MAX_JOINTS, "Skinning matrices array cannot have more than % elements for now.");
 
     /*
 	// Fill the uniform buffer with the skinning data
@@ -43,4 +61,3 @@ draw_mesh :: (using mesh : Skinned_Mesh, model_matrix : Matrix4, skinning_matric
 
 	glDrawElements(GL_TRIANGLES, cast(u32)indices.count, GL_UNSIGNED_INT, null);
 }
-

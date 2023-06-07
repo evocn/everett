@@ -3,11 +3,9 @@
 // Alex Hartford
 // June 2023
 
-#import "Text_File_Handler";
-
 error_out :: inline (handler : Text_File_Handler, str : string, args : ..Any) -> bool
 {
-	error (handler, str, ..args);
+	error(handler, str, ..args);
 	return false;
 }
 
