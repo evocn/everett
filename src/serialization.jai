@@ -31,12 +31,22 @@ serialize :: (entities : [..] *Entity) -> string {
     print_to_builder(*builder, "[%] # Version Number\n\n", SERIALIZATION_VERSION);
     print_to_builder(*builder, "% # Number of Entities\n\n", entities.count);
     for entities {
-        print_to_builder(*builder, "%\n", it.name);
         print_to_builder(*builder, "%\n", cast(int)it.kind);
+        print_to_builder(*builder, "%\n", it.name);
         print_to_builder(*builder, "%\n", it.position);
         print_to_builder(*builder, "%\n", it.orientation);
         print_to_builder(*builder, "%\n", it.scale);
         print_to_builder(*builder, "%\n", it.mesh_name);
+
+        if it.kind == {
+            case .BIRD;
+
+            case .TILE;
+            using cast(*Tile)it;
+            print_to_builder(*builder, "%\n", tile_kind);
+        }
+
+        print_to_builder(*builder, "\n");
     }
 
     return builder_to_string(*builder);
@@ -61,15 +71,35 @@ deserialize :: (entities: *[..] *Entity, meshes : Table(string, *Skinned_Mesh), 
 
     ok : bool;
     for i : 0..number_of_entities-1 {
-        new_entity := New(Entity);
+        kind_tmp : int;
+        kind_tmp, ok = parse_int(*handler);
+        kind := cast(Entity_Kind)kind_tmp;
+
+        new_entity : *Entity;
+        if #complete kind == {
+            case .BIRD;
+            new_entity = cast(*Entity)New(Bird);
+
+            case .TILE;
+            new_entity = cast(*Entity)New(Tile);
+        }
+
+        new_entity.kind = kind;
         new_entity.name,        ok = parse_string(*handler);
-        kind : int;
-        kind,                   ok = parse_int(*handler);
-        new_entity.kind = cast(Entity_Kind)kind;
         new_entity.position,    ok = parse_vector3(*handler);
         new_entity.orientation, ok = parse_quaternion(*handler);
         new_entity.scale,       ok = parse_float(*handler);
         new_entity.mesh_name,   ok = parse_string(*handler);
+
+        if kind == {
+            case .BIRD;
+
+            case .TILE;
+            using cast(*Tile)new_entity;
+            tile_kind_tmp : int;
+            tile_kind_tmp, ok = parse_int(*handler);
+            tile_kind = cast(Tile_Kind)tile_kind_tmp;
+        }
 
         array_add(entities, new_entity);
     }

@@ -29,6 +29,7 @@ build :: () {
     add_build_file(tprint("%/init.jai", #filepath), w);
     add_build_file(tprint("%/imgui_init.jai", #filepath), w);
     add_build_file(tprint("%/editor.jai", #filepath), w);
+    add_build_file(tprint("%/inspector.jai", #filepath), w);
     add_build_file(tprint("%/input.jai", #filepath), w);
     add_build_file(tprint("%/camera.jai", #filepath), w);
 
@@ -37,6 +38,8 @@ build :: () {
     add_build_file(tprint("%/animation.jai", #filepath), w);
 
     add_build_file(tprint("%/serialization.jai", #filepath), w);
+
+    add_build_file(tprint("%/grid.jai", #filepath), w);
 
     add_build_file(tprint("%/primitives.jai", #filepath), w);
     add_build_file(tprint("%/parse_utils.jai", #filepath), w);

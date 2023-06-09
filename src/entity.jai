@@ -3,9 +3,14 @@
 // Alex Hartford
 // June 2023
 
-Entity_Kind :: enum #specified {
+// @Example
+Bird :: struct {
+    #as using entity : Entity;
+}
+
+Entity_Kind :: enum #complete #specified {
     BIRD :: 1;
-    CUBE :: 2;
+    TILE :: 2;
 }
 
 Entity :: struct {

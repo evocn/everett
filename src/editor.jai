@@ -3,7 +3,6 @@
 // Alex Hartford
 // June 2023
 
-
 update_and_draw_editor :: (entities : *[..] *Entity, meshes : Table(string, *Skinned_Mesh)) {
     io := ImGui.GetIO();
     program_state.framerate = io.Framerate;
@@ -58,7 +57,18 @@ entity_editor :: (using entity: *Entity, entities : *[..] *Entity) {
         }
             
         ImGui.SliderFloat3("P", xx *position, -1.0, 1.0);
-        ImGui.SliderFloat("S",  xx *scale,     0.0, 3.0);
+        ImGui.SliderFloat ("S", xx *scale,     0.0, 3.0);
+
+        // @TODO: Either integrate this better, or don't even bother with my own inspector code...
+        // Cuz this is great!
+        if kind == {
+            case .BIRD;
+
+            case .TILE; {
+                tile := cast(*Tile)entity;
+                inspect("Tile", tile);
+            }
+        }
     }
     ImGui.End();
 }

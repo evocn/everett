@@ -53,7 +53,7 @@ LOOK TO SIMP FOR A NICE IMPLEMENTATION.
 * Animation Viewer
 
 Hotloading
-(File_Watcher)
+(File Watcher)
 * Meshes
 * Animations
 * Textures
