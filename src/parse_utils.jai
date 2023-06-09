@@ -9,6 +9,14 @@ error_out :: inline (handler : Text_File_Handler, str : string, args : ..Any) ->
 	return false;
 }
 
+parse_string :: (handler : *Text_File_Handler) -> string, bool
+{
+	line, ok := consume_next_line(handler);
+	if !ok
+		return line, error_out(handler, "Unexpected EOF.");
+	return line, true;
+}
+
 // Parse a line in the format IDENTIFIER INTEGER
 parse_ident_and_int_line :: (handler : *Text_File_Handler, expected_ident : string) -> int, bool
 {
@@ -47,6 +55,26 @@ parse_int :: (handler : *Text_File_Handler, $Int_Type := s64) -> Int_Type, bool
 	// @Cleanup: This will fail if the integer is out of bounds, but
 	// we probably should check for overflow ourselves
 	result := cast (Int_Type) val;
+	line = trim_left (line);
+	if line.count > 0
+		return 0, error_out (handler, "Expected end of line.");
+	return result, true;
+}
+
+parse_float :: (handler : *Text_File_Handler, $Float_Type := float32) -> Float_Type, bool
+#modify {
+	info := cast (*Type_Info) Float_Type;
+	return info.type == .FLOAT;
+}
+{
+	line, ok := consume_next_line (handler);
+	if !ok
+		return 0, error_out (handler, "Unexpected EOF.");
+	val : float64;
+	val, ok, line = string_to_float (line);
+	if !ok
+		return 0, error_out (handler, "Expected a float.");
+	result := cast (Float_Type) val;
 	line = trim_left (line);
 	if line.count > 0
 		return 0, error_out (handler, "Expected end of line.");

@@ -17,6 +17,7 @@ input : struct {
 handle_events :: () {
     event : SDL_Event;
     while SDL_PollEvent(*event) {
+        ImGui_ImplSdl_ProcessEvent(*event);
         if event.type == {
             case SDL_QUIT;
                 running = false;
@@ -41,11 +42,19 @@ handle_events :: () {
                         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
                     settings.line_mode = !settings.line_mode;
                 }
-                if event.key.keysym.sym == SDLK_r {
-                    settings.control_camera = !settings.control_camera;
-                }
 
                 // Editor Inputs
+                if event.key.keysym.sym == SDLK_r {
+                    if program_state.mode == .GAME {
+                        program_state.mode = .EDITOR;
+                        program_state.control_camera_looking = false;
+                    }
+                    else {
+                        program_state.mode = .GAME;
+                        program_state.control_camera_looking = true;
+                    }
+                }
+
                 if event.key.keysym.sym == SDLK_w input.w = true;
                 if event.key.keysym.sym == SDLK_a input.a = true;
                 if event.key.keysym.sym == SDLK_s input.s = true;

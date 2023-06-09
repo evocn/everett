@@ -29,12 +29,15 @@ update_flying_camera :: (using camera : *Camera, delta_time : float)
 	mouse_delta : Vector2;
 	move_input  : Vector3;
 	move_speed  : float;
-	if settings.control_camera
+	if program_state.control_camera_looking
 	{
         mouse_delta_x, mouse_delta_y : s32;
         mouse_button_delta := SDL_GetRelativeMouseState(*mouse_delta_x, *mouse_delta_y);
 		mouse_delta = xy(xx mouse_delta_x, xx mouse_delta_y);
+    }
 
+	if program_state.control_camera_movement
+    {
 		move_speed = FLY_SPEED;
 		if input.shift then move_speed *= 10;
 		move_speed *= delta_time;

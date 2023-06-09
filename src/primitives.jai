@@ -1,51 +1,18 @@
 // Everett
-// Line
+// Primitives
 // Alex Hartford
 // June 2023
 
 
-// OpenGL Lines
+
+// Lines
 //
 
 // @NOTE: These lines cannot add more members after being initialized.
 // @TODO: Create a more robust solution.
 Line :: struct {
     points: [..] Vector3;
-
     vao, vbo : GLuint;
-}
-
-forward_inverse_kinematics :: (using line: *Line, target : Vector3, distance_threshold := 0.0001) -> bool {
-    distances : [..] float;
-    for i : 0..points.count-2 array_add(*distances, distance(points[i], points[i+1]));
-
-    for i : 0..points.count-2 {
-        direction := normalize(points[i+1] - points[i]);
-        points[i+1] = points[i] + direction * distances[i];
-    }
-
-    if distance(points[points.count-1], target) <= distance_threshold
-        return true;
-    else
-        return false;
-}
-
-backward_inverse_kinematics :: (using line: *Line, target : Vector3, distance_threshold := 0.0001) -> bool {
-    distances : [..] float;
-    for i : 0..points.count-2 array_add(*distances, distance(points[i], points[i+1]));
-
-    initial_point_zero := points[0];
-    points[points.count-1] = target;
-
-    for < i : points.count-1..1 {
-        direction := normalize(points[i-1] - points[i]);
-        points[i-1] = points[i] + direction * distances[i-1];
-    }
-
-    if distance(points[0], initial_point_zero) <= distance_threshold
-        return true;
-    else
-        return false;
 }
 
 init_line_rendering_objects :: (using line: *Line)
