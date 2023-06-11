@@ -43,6 +43,21 @@ is_impassible :: (using tile: Tile) -> bool {
     return false;
 }
 
+filter_out_impassible :: (squares : *[..] Square, using map: Map) {
+    for <<squares {
+        tile := get_tile(map, it);
+        if is_impassible(tile) remove it;
+    }
+
+}
+
+filter_out_occupied :: (squares : *[..] Square, using map: Map) {
+    for << squares {
+        if get_occupant(map, it) remove it;
+    }
+}
+
+
 //
 //
 
@@ -66,6 +81,10 @@ remove_occupant :: (using map: *Map, using square: Square) {
 
 occupy :: (using map: *Map, using square: Square, unit: *Unit) {
     occupancy[col][row] = unit;
+}
+
+get_tile :: (using map: Map, using square: Square) -> *Tile {
+    return *grid[col][row];
 }
 
 //

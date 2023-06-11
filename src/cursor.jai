@@ -19,6 +19,7 @@ cursor : struct {
     selected_initial_square : Square = .{-1, -1};
 
     accessible : [..] Square;
+    interactible : [..] Square;
 
     // I like the into the breach states, where you're only ever really holding a unit when they move, or when you're targeting.
     // Everything else is just: "Push a button when you're over a unit, maybe you'll end up in a state."
@@ -40,38 +41,38 @@ update_cursor :: (map : *Map) {
 
     maybe_move_cursor();
 
-    if input.space {
+    if input.button_1 {
         if selected {
             attempt_place_selected_unit(map);
         }
         else {
             attempt_select_unit(map);
         }
-        input.space = false;
+        input.button_1 = false;
     }
 
-    if input.shift {
+    if input.button_2 {
         deselect_unit(map);
-        input.shift = false;
+        input.button_2 = false;
     }
 }
 
 maybe_move_cursor :: () {
-    if input.w {
+    if input.up {
         move_cursor(.NORTH);
-        input.w = false;
+        input.up = false;
     }
-    if input.a {
+    if input.left {
         move_cursor(.EAST);
-        input.a = false;
+        input.left = false;
     }
-    if input.s {
+    if input.down {
         move_cursor(.SOUTH);
-        input.s = false;
+        input.down = false;
     }
-    if input.d {
+    if input.right {
         move_cursor(.WEST);
-        input.d = false;
+        input.right = false;
     }
 }
 
@@ -79,10 +80,11 @@ attempt_select_unit :: (map : *Map) {
     using cursor;
 
     selected = get_occupant(map, square);
-    if selected {
-        selected_initial_square = square;
-        accessible = accessible_squares_from_position(map, square, selected.movement);
-    }
+    if !selected return;
+
+    selected_initial_square = square;
+    accessible = get_accessible_squares_from_position(map, selected);
+    filter_out_impassible(*accessible, map);
 }
 
 deselect_unit :: (map : *Map) {
@@ -108,6 +110,16 @@ attempt_place_selected_unit :: (map : *Map) {
     selected = null;
     selected_initial_square = Square.{-1, -1};
     array_reset(*accessible);
+}
+
+attempt_target_with_unit :: (map : *Map) {
+    using cursor;
+
+    selected = get_occupant(map, square);
+    if !selected return;
+
+    interactible = get_interactible_squares_from_position(square, selected.range);
+    //filter_out_impassible(*interactible, map);
 }
 
 move_cursor :: (direction : Direction) {

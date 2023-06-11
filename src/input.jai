@@ -4,15 +4,23 @@
 // June 2023
 
 input : struct {
-    w := false;
-    a := false;
-    s := false;
-    d := false;
-    q := false;
-    e := false;
+    up    := false;
+    left  := false;
+    down  := false;
+    right := false;
 
-    shift := false;
-    space := false;
+    button_1 := false;
+    button_2 := false;
+    button_3 := false;
+    button_4 := false;
+
+    /*
+    menu_button := false;
+    button_5 := false;
+    button_6 := false;
+    button_7 := false;
+    button_8 := false;
+    */
 }
 
 handle_events :: () {
@@ -23,14 +31,14 @@ handle_events :: () {
             case SDL_QUIT;
                 running = false;
             case SDL_KEYUP;
-                if event.key.keysym.sym == SDLK_w input.w = false;
-                if event.key.keysym.sym == SDLK_a input.a = false;
-                if event.key.keysym.sym == SDLK_s input.s = false;
-                if event.key.keysym.sym == SDLK_d input.d = false;
-                if event.key.keysym.sym == SDLK_q input.q = false;
-                if event.key.keysym.sym == SDLK_e input.e = false;
-                if event.key.keysym.sym == SDLK_LSHIFT input.shift = false;
-                if event.key.keysym.sym == SDLK_SPACE  input.space = false;
+                if event.key.keysym.sym == SDLK_w input.up    = false;
+                if event.key.keysym.sym == SDLK_a input.left  = false;
+                if event.key.keysym.sym == SDLK_s input.down  = false;
+                if event.key.keysym.sym == SDLK_d input.right = false;
+                if event.key.keysym.sym == SDLK_SPACE  input.button_1 = false;
+                if event.key.keysym.sym == SDLK_LSHIFT input.button_2 = false;
+                if event.key.keysym.sym == SDLK_q      input.button_3 = false;
+                if event.key.keysym.sym == SDLK_e      input.button_4 = false;
 
             case SDL_KEYDOWN;
                 if event.key.keysym.sym == SDLK_ESCAPE running = false;
@@ -85,14 +93,14 @@ handle_events :: () {
                 }
 
                 // Actual Inputs
-                if event.key.keysym.sym == SDLK_w input.w = true;
-                if event.key.keysym.sym == SDLK_a input.a = true;
-                if event.key.keysym.sym == SDLK_s input.s = true;
-                if event.key.keysym.sym == SDLK_d input.d = true;
-                if event.key.keysym.sym == SDLK_q input.q = true;
-                if event.key.keysym.sym == SDLK_e input.e = true;
-                if event.key.keysym.sym == SDLK_LSHIFT input.shift = true;
-                if event.key.keysym.sym == SDLK_SPACE  input.space = true;
+                if event.key.keysym.sym == SDLK_w input.up    = true;
+                if event.key.keysym.sym == SDLK_a input.left  = true;
+                if event.key.keysym.sym == SDLK_s input.down  = true;
+                if event.key.keysym.sym == SDLK_d input.right = true;
+                if event.key.keysym.sym == SDLK_SPACE  input.button_1 = true;
+                if event.key.keysym.sym == SDLK_LSHIFT input.button_2 = true;
+                if event.key.keysym.sym == SDLK_q      input.button_3 = true;
+                if event.key.keysym.sym == SDLK_e      input.button_4 = true;
 
 
                 /*

@@ -47,7 +47,8 @@ render :: (map : Map, units : [..] *Unit)
         set_mat4(shader, "projection", camera.projection_matrix);
         set_mat4(shader, "view", camera.view_matrix);
 
-        draw_accessible(shader);
+        draw_squares_overlay(shader, cursor.accessible);
+        draw_square_overlay(shader, cursor.square, color = blue, alpha = 0.8, height_above_stage = 0.1);
     }
 }
 
@@ -132,7 +133,12 @@ draw_unit :: (using unit : Unit, shader : Shader) {
         return;
     }
 
-    set_vec4(shader, "color", black);
+    if team == {
+        case .NONE;  set_vec4(shader, "color", black);
+        case .BLUE;  set_vec4(shader, "color", blue);
+        case .RED;   set_vec4(shader, "color", red);
+        case .GREEN; set_vec4(shader, "color", green);
+    }
 
     unit_scale :: 1.5;
     scale := make_scale_matrix4(Vector3.{unit_scale, unit_scale, unit_scale});
@@ -158,20 +164,28 @@ get_world_space_center_of_a_tile :: (using square : Square) -> Vector3 {
     return Vector3.{(2.0 * col) - grid_width + 0.5, 0.0, (2.0 * row) - grid_height + 0.5};
 }
 
-draw_accessible :: (shader : Shader) {
-    overlay_alpha :: 0.5;
-    set_vec4(shader, "color", green - Vector4.{0, 0, 0, 1 - overlay_alpha});
+draw_squares_overlay :: (shader : Shader, squares : [..] Square, color := green, alpha := 0.5, height_above_stage := 0.05) {
+    set_vec4(shader, "color", color - Vector4.{0, 0, 0, 1 - alpha});
 
-    amount_overlay_is_above_the_stage :: 0.05;
-
-    for cursor.accessible {
+    for squares {
         position := get_world_space_center_of_a_tile(it);
-        translation := make_translation_matrix4(position + Vector3.{y=amount_overlay_is_above_the_stage});
+        translation := make_translation_matrix4(position + Vector3.{y=height_above_stage});
         model := translation;
 
         set_mat4(shader, "model", model);
         draw_quad(quad);
     }
+}
+
+draw_square_overlay :: (shader : Shader, square : Square, color := green, alpha := 0.5, height_above_stage := 0.05) {
+    set_vec4(shader, "color", color - Vector4.{0, 0, 0, 1 - alpha});
+
+    position := get_world_space_center_of_a_tile(square);
+    translation := make_translation_matrix4(position + Vector3.{y=height_above_stage});
+    model := translation;
+
+    set_mat4(shader, "model", model);
+    draw_quad(quad);
 }
 
 //

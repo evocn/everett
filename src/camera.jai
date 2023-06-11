@@ -82,11 +82,11 @@ update_flying_camera :: (delta_time : float)
     || program_state.camera_mode == .EDITOR
     {
 		move_speed = FLY_SPEED;
-		if input.shift then move_speed *= 10;
+		if input.button_2 then move_speed *= 10;
 		move_speed *= delta_time;
-		move_input.x = cast(float)input.d - cast(float)input.a;
-		move_input.y = cast(float)input.e - cast(float)input.q;
-		move_input.z = cast(float)input.s - cast(float)input.w;
+		move_input.x = cast(float)input.right - cast(float)input.left;
+		move_input.y = cast(float)input.button_4 - cast(float)input.button_3;
+		move_input.z = cast(float)input.down - cast(float)input.up;
 		move_input = rotate(unit_vector(move_input), rotation);
 	}
     

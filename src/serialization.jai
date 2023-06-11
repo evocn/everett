@@ -30,9 +30,12 @@ serialize :: (units : [..] *Unit) -> string {
     print_to_builder(*builder, "% # Number of Units\n\n", units.count);
     for units {
         print_to_builder(*builder, "%\n", it.name);
-        print_to_builder(*builder, "%\n", cast(int)it.direction);
-        print_to_builder(*builder, "%\n", it.square);
         print_to_builder(*builder, "%\n", it.mesh_name);
+        print_to_builder(*builder, "% # Square\n", it.square);
+        print_to_builder(*builder, "% # Direction\n", cast(int)it.direction);
+        print_to_builder(*builder, "% # Team\n", cast(int)it.team);
+        print_to_builder(*builder, "% # Movement\n", it.movement);
+        print_to_builder(*builder, "% # Range\n", it.range);
 
         print_to_builder(*builder, "\n");
     }
@@ -66,11 +69,16 @@ deserialize :: (units: *[..] *Unit, full_path : string) -> bool {
     for i : 0..number_of_units-1 {
         new_unit := New(Unit);
         new_unit.name,      ok = parse_string(*handler);
+        new_unit.mesh_name, ok = parse_string(*handler);
+        new_unit.square,    ok = parse_square(*handler);
         direction_tmp : int;
         direction_tmp,      ok = parse_int(*handler);
         new_unit.direction = cast(Direction)direction_tmp;
-        new_unit.square,    ok = parse_square(*handler);
-        new_unit.mesh_name, ok = parse_string(*handler);
+        team_tmp : int;
+        team_tmp,           ok = parse_int(*handler);
+        new_unit.team = cast(Team)team_tmp;
+        new_unit.movement,  ok = parse_int(*handler);
+        new_unit.range,     ok = parse_int(*handler);
 
         array_add(units, new_unit);
     }
