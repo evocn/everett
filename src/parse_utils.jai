@@ -169,3 +169,17 @@ parse_matrix4 :: (handler : *Text_File_Handler) -> Matrix4, bool
 	}
 	return result, true;
 }
+
+//
+//
+
+parse_square :: (handler : *Text_File_Handler) -> Square, bool
+{
+	components, ok := parse_int_tuple(handler, 2);
+	if !ok
+		return .{}, false;
+	result : Square = ---;
+	result.col = xx components[0];
+	result.row = xx components[1];
+	return result, true;
+}

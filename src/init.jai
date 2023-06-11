@@ -9,7 +9,7 @@ init :: () -> bool {
     // Create an application window with the following settings:
     window = SDL_CreateWindow("Everett",
         SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, window_width, window_height,
-        SDL_WINDOW_OPENGL|SDL_WINDOW_SHOWN|SDL_WINDOW_INPUT_GRABBED);
+        SDL_WINDOW_OPENGL|SDL_WINDOW_SHOWN);
 
     if !window {
         print("Could not create window: %\n", to_string(SDL_GetError()));
@@ -17,8 +17,8 @@ init :: () -> bool {
     }
 
     // SDL Settings
-    //SDL_ShowCursor(0);
-    //SDL_SetRelativeMouseMode(SDL_TRUE);
+    SDL_ShowCursor(0);
+    SDL_SetRelativeMouseMode(SDL_TRUE);
 
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, xx SDL_GL_CONTEXT_PROFILE_CORE);
 
@@ -35,8 +35,8 @@ init :: () -> bool {
     // GL Settings
     glDepthMask(GL_TRUE);
     glEnable(GL_DEPTH_TEST); 
-    glLineWidth(10);
-    glPointSize(10);
+    glLineWidth(1);
+    glPointSize(5);
 
 
     // ImGui Setup

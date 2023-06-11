@@ -3,7 +3,7 @@
 // Alex Hartford
 // June 2023
 
-update_and_draw_editor :: (entities : *[..] *Entity, meshes : Table(string, *Skinned_Mesh)) {
+update_and_draw_editor :: (units : *[..] *Unit, meshes : Table(string, *Skinned_Mesh)) {
     io := ImGui.GetIO();
     program_state.framerate = io.Framerate;
 
@@ -14,9 +14,9 @@ update_and_draw_editor :: (entities : *[..] *Entity, meshes : Table(string, *Ski
     program_state.imgui_capturing_keyboard = io.WantCaptureKeyboard;
 
     meshes_display(meshes);
-    entities_editor(entities, meshes);
-    if editor.selected_entity != -1 {
-        entity_editor((<<entities)[editor.selected_entity], entities);
+    units_editor(units, meshes);
+    if editor.selected_unit != -1 {
+        unit_editor((<<units)[editor.selected_unit], units);
     }
 
     settings_editor();
@@ -37,58 +37,45 @@ update_and_draw_editor :: (entities : *[..] *Entity, meshes : Table(string, *Ski
     ImGui.Render();
 }
 
-entity_editor :: (using entity: *Entity, entities : *[..] *Entity) {
-    ImGui.Begin("Entity");
+unit_editor :: (using unit: *Unit, units : *[..] *Unit) {
+    ImGui.Begin("Unit");
     {
         ImGui.Text("%", name);
         ImGui.SameLine();
         if ImGui.Button("remove") {
             // @TODO: Make this a command
-            array_ordered_remove_by_index(entities, editor.selected_entity);
-            editor.selected_entity = -1;
+            array_ordered_remove_by_index(units, editor.selected_unit);
+            editor.selected_unit = -1;
         }
         ImGui.SameLine();
         if ImGui.Button("copy") {
             // @TODO: Make this a command
-            new_entity := New(Entity);
-            memcpy(new_entity, entity, size_of(Entity));
-            array_add(entities, new_entity);
-            editor.selected_entity = entities.count-1;
+            new_unit := New(Unit);
+            memcpy(new_unit, unit, size_of(Unit));
+            array_add(units, new_unit);
+            editor.selected_unit = units.count-1;
         }
-            
-        ImGui.SliderFloat3("P", xx *position, -1.0, 1.0);
-        ImGui.SliderFloat ("S", xx *scale,     0.0, 3.0);
-
-        // @TODO: Either integrate this better, or don't even bother with my own inspector code...
-        // Cuz this is great!
-        if kind == {
-            case .BIRD;
-
-            case .TILE; {
-                tile := cast(*Tile)entity;
-                inspect("Tile", tile);
-            }
-        }
+        // INSPECT HERE!
     }
     ImGui.End();
 }
 
-entities_editor :: (entities : *[..] *Entity, meshes : Table(string, *Skinned_Mesh)) {
-    ImGui.Begin("Entities");
+units_editor :: (units : *[..] *Unit, meshes : Table(string, *Skinned_Mesh)) {
+    ImGui.Begin("Units");
     {
         ImGui.Text("Current level: %", program_state.current_level_name);
         if(ImGui.Button("Save")) {
-            save_level(<<entities, program_state.current_level_name);
+            save_units(<<units, program_state.current_level_name);
         }
         ImGui.SameLine();
         if(ImGui.Button("load")) {
-            load_level(entities, meshes, program_state.current_level_name);
+            load_units(units, meshes, program_state.current_level_name);
         }
 
         if ImGui.BeginListBox("###420") {
-            for <<entities {
-                if ImGui.Selectable(to_c_string(tprint("% | %", it_index, it.name)), editor.selected_entity == it_index)
-                    editor.selected_entity = it_index;
+            for <<units {
+                if ImGui.Selectable(to_c_string(tprint("% | %", it_index, it.name)), editor.selected_unit == it_index)
+                    editor.selected_unit = it_index;
             }
             ImGui.EndListBox();
         }
@@ -131,7 +118,7 @@ debug_display :: () {
     ImGui.Begin("Debug Display");
     {
         ImGui.Text("Editor");
-        ImGui.Text("Selected Entity: %", editor.selected_entity);
+        ImGui.Text("Selected Entity: %", editor.selected_unit);
         ImGui.Text("Selected Mesh: %", editor.selected_mesh);
 
         ImGui.Text("average % ms/frame (% FPS)", 

@@ -4,6 +4,7 @@
 // June 2023
 
 // @NOTE Adapted from the compiler beta's ImGui example file "imgui_inspector.jai"
+// @TODO: I wonder if we could do this kind of thing for serialization...
 
 inspect :: (name: *u8, t : *$T) {
 

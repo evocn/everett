@@ -3,48 +3,36 @@
 // Alex Hartford
 // June 2023
 
-SERIALIZATION_VERSION :: 1;
-serialization_path :: "data/levels";
+UNITS_VERSION :: 1;
+units_path :: "data/levels";
 
-save_level :: (entities : [..] *Entity, filename : string) {
+save_units :: (units : [..] *Unit, filename : string) {
     print("Saving %\n", filename);
-    serialized := serialize(entities);
-    write_entire_file(tprint("%/%", serialization_path, filename), serialized);
+    serialized := serialize(units);
+    write_entire_file(tprint("%/%", units_path, filename), serialized);
 }
 
-load_level :: (entities: *[..] *Entity, meshes : Table(string, *Skinned_Mesh), filename : string) {
+load_units :: (units: *[..] *Unit, meshes : Table(string, *Skinned_Mesh), filename : string) {
     print("Loading %\n", filename);
-    success := deserialize(entities, meshes, tprint("%/%", serialization_path, "level1.entities"));
+    success := deserialize(units, meshes, tprint("%/%", units_path, filename));
     assert(success, "Unable to load file %\n", filename);
 }
 
 //
 //
 
-#scope_file
-
-serialize :: (entities : [..] *Entity) -> string {
+serialize :: (units : [..] *Unit) -> string {
     builder: String_Builder;
 	defer free_buffers(*builder);
 
     init_string_builder(*builder);
-    print_to_builder(*builder, "[%] # Version Number\n\n", SERIALIZATION_VERSION);
-    print_to_builder(*builder, "% # Number of Entities\n\n", entities.count);
-    for entities {
-        print_to_builder(*builder, "%\n", cast(int)it.kind);
+    print_to_builder(*builder, "[%] # Version Number\n\n", UNITS_VERSION);
+    print_to_builder(*builder, "% # Number of Units\n\n", units.count);
+    for units {
         print_to_builder(*builder, "%\n", it.name);
-        print_to_builder(*builder, "%\n", it.position);
-        print_to_builder(*builder, "%\n", it.orientation);
-        print_to_builder(*builder, "%\n", it.scale);
+        print_to_builder(*builder, "%\n", cast(int)it.direction);
+        print_to_builder(*builder, "%\n", it.square);
         print_to_builder(*builder, "%\n", it.mesh_name);
-
-        if it.kind == {
-            case .BIRD;
-
-            case .TILE;
-            using cast(*Tile)it;
-            print_to_builder(*builder, "%\n", tile_kind);
-        }
 
         print_to_builder(*builder, "\n");
     }
@@ -52,65 +40,118 @@ serialize :: (entities : [..] *Entity) -> string {
     return builder_to_string(*builder);
 }
 
-deserialize :: (entities: *[..] *Entity, meshes : Table(string, *Skinned_Mesh), filename : string) -> bool {
-    array_reset(entities);
+// @Robustness: We can most certainly do a better job handling bad
+// serialization files, most likely by refusing to parse them, and returning no
+// entities. This will reduce the chance that we'll autosave or accidentally manual-save a wonky file.
+// I want this to be idiot-proof, and for me to never have to worry about giving the engine to a designer.
+deserialize :: (units: *[..] *Unit, meshes : Table(string, *Skinned_Mesh), full_path : string) -> bool {
+    array_reset(units);
 
 	handler : Text_File_Handler;
 	defer deinit(*handler);
 
-	found_slash, dir, basename := split_from_right(filename, #char "/");
-	if !found_slash then basename = filename;
-	start_file(*handler, basename, filename, optional = false);
+	found_slash, dir, basename := split_from_right(full_path, #char "/");
+	if !found_slash then basename = full_path;
+	start_file(*handler, basename, full_path, optional = false);
 	if handler.failed return false;
 
-	if handler.version != SERIALIZATION_VERSION
+	if handler.version != UNITS_VERSION
 		return error_out(handler, "Invalid version number.");
 
 	line, found := consume_next_line(*handler);
-    number_of_entities := string_to_int(line);
+    number_of_units := string_to_int(line);
 
     ok : bool;
-    for i : 0..number_of_entities-1 {
-        kind_tmp : int;
-        kind_tmp, ok = parse_int(*handler);
-        kind := cast(Entity_Kind)kind_tmp;
+    // @TODO: Make this not rely on the number?
+    for i : 0..number_of_units-1 {
+        new_unit := New(Unit);
+        new_unit.name,      ok = parse_string(*handler);
+        direction_tmp : int;
+        direction_tmp,      ok = parse_int(*handler);
+        new_unit.direction = cast(Direction)direction_tmp;
+        new_unit.square,    ok = parse_square(*handler);
+        new_unit.mesh_name, ok = parse_string(*handler);
 
-        new_entity : *Entity;
-        if #complete kind == {
-            case .BIRD;
-            new_entity = cast(*Entity)New(Bird);
-
-            case .TILE;
-            new_entity = cast(*Entity)New(Tile);
-        }
-
-        new_entity.kind = kind;
-        new_entity.name,        ok = parse_string(*handler);
-        new_entity.position,    ok = parse_vector3(*handler);
-        new_entity.orientation, ok = parse_quaternion(*handler);
-        new_entity.scale,       ok = parse_float(*handler);
-        new_entity.mesh_name,   ok = parse_string(*handler);
-
-        if kind == {
-            case .BIRD;
-
-            case .TILE;
-            using cast(*Tile)new_entity;
-            tile_kind_tmp : int;
-            tile_kind_tmp, ok = parse_int(*handler);
-            tile_kind = cast(Tile_Kind)tile_kind_tmp;
-        }
-
-        array_add(entities, new_entity);
+        array_add(units, new_unit);
     }
 
-    for <<entities {
+    for <<units {
         found_mesh : bool;
         it.mesh, found_mesh = table_find(*meshes, it.mesh_name);
-        if !found_mesh
+        if !found_mesh {
             log_error("Mesh not found: %.", it.mesh_name);
+            it.mesh = null;
+        }
     }
 
     return true;
 }
 
+//
+// Grids
+//
+
+GRID_VERSION :: 1;
+grids_path :: "data/levels";
+
+save_grid :: (using map : Map, filename : string) {
+    print("Saving %\n", filename);
+    builder: String_Builder;
+	defer free_buffers(*builder);
+
+    init_string_builder(*builder);
+    print_to_builder(*builder, "[%] # Version Number\n\n", GRID_VERSION);
+    print_to_builder(*builder, "% # Width\n", grid_width);
+    print_to_builder(*builder, "% # Height\n\n", grid_height);
+
+    print_grid_to_builder(*builder, grid);
+
+    write_entire_file(tprint("%/%", grids_path, filename), builder_to_string(*builder));
+}
+
+load_grid :: (using map : *Map, filename : string) {
+    print("Loading %\n", filename);
+    success := parse_grid(map, tprint("%/%", grids_path, filename));
+    assert(success, "Unable to load file %\n", filename);
+}
+
+print_grid_to_builder :: (builder : *String_Builder, grid : [grid_width][grid_height] Tile) {
+    for col : 0..grid_width-1 {
+        for row : 0..grid_height-1 {
+            print_to_builder(builder, "%", cast(int)grid[col][row].tile_kind);
+        }
+        print_to_builder(builder, "\n");
+    }
+}
+
+parse_grid :: (using map : *Map, full_path : string) -> bool {
+	handler : Text_File_Handler;
+	defer deinit(*handler);
+
+	found_slash, dir, basename := split_from_right(full_path, #char "/");
+	if !found_slash then basename = full_path;
+	start_file(*handler, basename, full_path, optional = false);
+	if handler.failed return false;
+
+	if handler.version != UNITS_VERSION
+		return error_out(handler, "Invalid version number.");
+
+    found : bool;
+    line : string;
+	line, found = consume_next_line(*handler);
+    file_says_grid_width := string_to_int(line);
+	line, found = consume_next_line(*handler);
+    file_says_grid_height := string_to_int(line);
+
+    assert(file_says_grid_width == grid_width);
+    assert(file_says_grid_height == grid_height);
+
+    for row : 0..grid_height-1 {
+        line, found = consume_next_line(*handler);
+        for character, col : cast([] u8)line {
+            grid[col][row].tile_kind = cast(Tile_Kind)(character - 48);
+        }
+    }
+
+    return true;
+}

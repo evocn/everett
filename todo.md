@@ -5,6 +5,8 @@ June 2023
 
 FIRST PRIORITIES:
 * Gameplay Code (Almost all of it). We want a working demo ASAP.
+* Actually good, robust serialization.
+* Snap to Grid positions
 * Editor Upgrades
 * OBJ Files
 * Textures
@@ -99,6 +101,7 @@ Think of what Josh/Brett will need to work on this game...
 Camera System.
 * Locked at a good angle.
 * Rotate around the board, like in Chess.
+* Maybe give it like four angles, which you can snap around to
 * Zoom in at different levels, like in FE.
 
 UI System.

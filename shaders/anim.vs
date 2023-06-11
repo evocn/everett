@@ -1,7 +1,4 @@
 #version 330 core
-
-out vec3 Normal;
-
 layout (location = 0) in vec3 VertexPosition;
 layout (location = 1) in vec3 VertexNormal;
 layout (location = 2) in vec3 BoneWeights;
@@ -15,10 +12,17 @@ uniform mat4 projection;
 uniform mat4 view;
 uniform mat4 model;
 
+out vec3 Fragment_Position;
+out vec3 View_Position;
+out vec3 Normal;
+
 void main ()
 {
-	gl_Position = projection * view * model * vec4(VertexPosition, 1);
-	Normal = VertexNormal;
+    Fragment_Position = vec3(model * vec4(VertexPosition, 1.0f));
+    View_Position = vec3(view * model * vec4(VertexPosition, 1.0f));
+    Normal = normalize(mat3(transpose(inverse(model))) * VertexNormal);
+
+	gl_Position = projection * view * vec4(Fragment_Position, 1.0);
 }
 
 /*

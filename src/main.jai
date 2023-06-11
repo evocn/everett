@@ -14,7 +14,14 @@ running : bool;
 //
 //
 
-camera : Camera;
+render_context : struct {
+    directional_light : Directional_Light = .{direction = Vector3.{y=-1}};
+    using shaders : struct {
+        basic_shader     : Shader;
+        texture_shader   : Shader;
+        animation_shader : Shader;
+    }
+}
 
 //
 //
@@ -26,11 +33,16 @@ program_state : struct {
     }
     mode : Program_Mode;
 
-    current_level_name := "level1.entities";
+    paused : bool;
 
-    control_camera_movement := true;
-    control_camera_looking  := true;
-    // @TODO: The cool thing from the other engine where you control the camera in editor mode by right-clicking (or maybe mouse wheel click?)
+    current_level_name := "level1.units";
+
+    Camera_Mode :: enum {
+        GAMEPLAY;
+        FREE;
+        EDITOR;
+    }
+    camera_mode := Camera_Mode.GAMEPLAY;
 
     imgui_capturing_mouse    := false;
     imgui_capturing_keyboard := false;
@@ -39,13 +51,16 @@ program_state : struct {
 }
 
 editor : struct {
-    selected_entity := -1;
+    selected_unit := -1;
     selected_mesh := "";
 }
 
 settings : struct {
     autosave  := true;
     line_mode := false;
+
+    default_camera_position :: Vector3.{0, 10, 10};
+    default_camera_angles   :: Vector3.{0, 1.0, 0};
 }
 
 //
@@ -61,15 +76,16 @@ main :: () {
     imgui_context := ImGui.CreateContext();
 
     // Shaders
-    basic_shader     := make_shader("basic.vs", "basic.fs");
-    texture_shader   := make_shader("texture.vs", "basic.fs");
-    animation_shader := make_shader("anim.vs", "main.fs");
+    render_context.basic_shader     = make_shader("basic.vs", "basic.fs");
+    render_context.texture_shader   = make_shader("texture.vs", "basic.fs");
+    render_context.animation_shader = make_shader("anim.vs", "main.fs");
 
     // Meshes
     // @TODO: This should be a bucket array.
     meshes : Table(string, *Skinned_Mesh);
     table_add(*meshes, "mesh_bird", new_skinned_mesh("bird.mesh"));
     table_add(*meshes, "mesh_cube", new_skinned_mesh("cube.mesh"));
+    table_add(*meshes, "mesh_sphere", new_skinned_mesh("sphere.mesh"));
     table_add(*meshes, "mesh_mannequin", new_skinned_mesh("mannequin.mesh"));
 
     /*
@@ -88,15 +104,37 @@ main :: () {
     pose = make_pose_for_skeleton(*mesh.skeleton);
     */
 
-    // Entities
-    entities : [..] *Entity;
+    // Map
+    map : Map;
+    found_mesh : bool;
+    map.cube_mesh, found_mesh = table_find(*meshes, "mesh_cube");
+    if !found_mesh {
+        log_error("Cube Mesh for tiles not found.\n");
+        map.cube_mesh = null;
+    }
+    load_grid(*map, "level1.map");
 
-    print("Welcome to the Everett Engine.\n");
+    // Cursor
+    cursor.mesh, found_mesh = table_find(*meshes, "mesh_cube");
+    if !found_mesh {
+        log_error("Mesh for cursor indicator not found.\n");
+        cursor.mesh = null;
+    }
 
-    load_level(*entities, meshes, program_state.current_level_name);
+    // Units... @TODO: Serialize!
+    units : [..] *Unit;
+    load_units(*units, meshes, program_state.current_level_name);
+    for units {
+        occupy(*map, it.square, it);
+    }
 
+    set_camera();
+
+    // @TODO: Put this stuff in settings? Its own place?
     autosave_interval := 60.0; // seconds
     next_autosave     := autosave_interval;
+
+    print("Welcome to the Everett Engine.\n");
 
     dt, last_frame := 0.0;
     running = true;
@@ -109,7 +147,7 @@ main :: () {
         // Autosave
         if settings.autosave {
             if(current_time > next_autosave) {
-                save_level(entities, program_state.current_level_name);
+                save_units(units, program_state.current_level_name);
                 print("Autosaving...\n");
                 next_autosave = next_autosave + autosave_interval;
             }
@@ -117,9 +155,13 @@ main :: () {
 
         // Handle Events
         handle_events();
-        update_flying_camera(*camera, dt);
+        update_flying_camera(dt);
 
         // Simulate
+        if !program_state.paused {
+            update_cursor(*map);
+        }
+
         /*
         reset_to_bind_pose(*pose);
         sample_animation(anim, animation_time, *pose, .LINEAR);
@@ -132,13 +174,14 @@ main :: () {
         generate_skinning_matrices(*pose, transpose_result = true);
         */
 
-        if program_state.mode == .EDITOR {
-            update_and_draw_editor(*entities, meshes);
+        // Editor
+        if program_state.mode == .EDITOR && program_state.camera_mode == .EDITOR {
+            update_and_draw_editor(*units, meshes);
         }
 
         // Render
-        render(entities, animation_shader, texture_shader);
-        if program_state.mode == .EDITOR {
+        render(map, units);
+        if program_state.mode == .EDITOR && program_state.camera_mode == .EDITOR {
             ImGui_ImplSdl_RenderDrawLists(ImGui.GetDrawData());
         }
         SDL_GL_SwapWindow(window);
