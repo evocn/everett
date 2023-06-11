@@ -38,6 +38,17 @@ render :: (map : Map, units : [..] *Unit)
         // Draw Cursor
         draw_cursor(shader);
     }
+
+    {
+        shader := render_context.basic_shader;
+        use_shader(shader);
+        defer disable_shaders();
+
+        set_mat4(shader, "projection", camera.projection_matrix);
+        set_mat4(shader, "view", camera.view_matrix);
+
+        draw_accessible(shader);
+    }
 }
 
 //
@@ -64,7 +75,7 @@ draw_skinned_mesh :: (using mesh : Skinned_Mesh, skinning_matrices : []Matrix4)
 }
 
 draw_selected_unit :: (using unit : *Unit, shader : Shader) {
-    oscillating := sin(cast(float32)get_time() * 5);
+    oscillating := sin(cast(float32)get_time());
     set_float(shader, "highlight", oscillating);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
@@ -80,6 +91,12 @@ draw_selected_unit :: (using unit : *Unit, shader : Shader) {
 }
 
 draw_tiles :: (using map : Map, shader : Shader) {
+    cube_mesh, found_mesh := table_find(*meshes, "mesh_cube");
+    if !found_mesh {
+        log_error("Cube Mesh for tiles not found.\n");
+        return;
+    }
+
     for col : 0..grid_width-1 {
         for row : 0..grid_height-1 {
             using tile := map.grid[col][row];
@@ -109,60 +126,82 @@ draw_tiles :: (using map : Map, shader : Shader) {
 }
 
 draw_unit :: (using unit : Unit, shader : Shader) {
-    if mesh {
-        set_vec4(shader, "color", black);
-
-        unit_scale :: 1.5;
-        scale := make_scale_matrix4(Vector3.{unit_scale, unit_scale, unit_scale});
-
-        orientation : Quaternion;
-        if direction == {
-            case .NORTH; set_from_axis_and_angle(*orientation, 0, 1, 0, PI);
-            case .SOUTH; set_from_axis_and_angle(*orientation, 0, 1, 0, 0);
-            case .EAST;  set_from_axis_and_angle(*orientation, 0, 1, 0, PI * 0.5);
-            case .WEST;  set_from_axis_and_angle(*orientation, 0, 1, 0, -PI * 0.5);
-        }
-        rotation := rotation_matrix(Matrix4, orientation);
-
-        position := get_world_space_center_of_a_tile(square);
-        translation := make_translation_matrix4(position);
-        model := translation * rotation * scale;
-        set_mat4(shader, "model", model);
-
-        draw_skinned_mesh(mesh, .[]);
+    mesh, found_mesh := table_find(*meshes, mesh_name);
+    if !found_mesh {
+        log_error("Unit Mesh not found: %.", mesh_name);
+        return;
     }
-    else {
-        log_error("Attempting to render %, which does not have a mesh attached.\n", name);
+
+    set_vec4(shader, "color", black);
+
+    unit_scale :: 1.5;
+    scale := make_scale_matrix4(Vector3.{unit_scale, unit_scale, unit_scale});
+
+    orientation : Quaternion;
+    if direction == {
+        case .NORTH; set_from_axis_and_angle(*orientation, 0, 1, 0, PI);
+        case .SOUTH; set_from_axis_and_angle(*orientation, 0, 1, 0, 0);
+        case .EAST;  set_from_axis_and_angle(*orientation, 0, 1, 0, PI * 0.5);
+        case .WEST;  set_from_axis_and_angle(*orientation, 0, 1, 0, -PI * 0.5);
     }
+    rotation := rotation_matrix(Matrix4, orientation);
+
+    position := get_world_space_center_of_a_tile(square);
+    translation := make_translation_matrix4(position);
+    model := translation * rotation * scale;
+    set_mat4(shader, "model", model);
+
+    draw_skinned_mesh(mesh, .[]);
 }
 
 get_world_space_center_of_a_tile :: (using square : Square) -> Vector3 {
     return Vector3.{(2.0 * col) - grid_width + 0.5, 0.0, (2.0 * row) - grid_height + 0.5};
 }
 
+draw_accessible :: (shader : Shader) {
+    overlay_alpha :: 0.5;
+    set_vec4(shader, "color", green - Vector4.{0, 0, 0, 1 - overlay_alpha});
+
+    amount_overlay_is_above_the_stage :: 0.05;
+
+    for cursor.accessible {
+        position := get_world_space_center_of_a_tile(it);
+        translation := make_translation_matrix4(position + Vector3.{y=amount_overlay_is_above_the_stage});
+        model := translation;
+
+        set_mat4(shader, "model", model);
+        draw_quad(quad);
+    }
+}
+
+//
+//
+
 draw_cursor :: (shader: Shader) {
     using cursor;
-    if mesh {
-        set_vec4(shader, "color", blue);
 
-        cursor_scale :: 0.5;
-        scale := make_scale_matrix4(Vector3.{cursor_scale, cursor_scale, cursor_scale});
-
-        rotating    := cast(float32)get_time() * 2;
-        oscillating := sin(cast(float32)get_time() * 5) * 0.5;
-        orientation : Quaternion;
-        set_from_axis_and_angle(*orientation, 0, 1, 0, rotating);
-        rotation := rotation_matrix(Matrix4, orientation);
-
-        position := get_world_space_center_of_a_tile(square) + Vector3.{y=3} + Vector3.{y=oscillating};
-        translation := make_translation_matrix4(position);
-        model := translation * rotation * scale;
-        set_mat4(shader, "model", model);
-
-        draw_skinned_mesh(mesh, .[]);
-    }
-    else {
-        log_error("Attempting to render the cursor, but it doesn't have a mesh specified.\n");
+    // Cursor
+    mesh, found_mesh := table_find(*meshes, "mesh_cube");
+    if !found_mesh {
+        log_error("Mesh for cursor indicator not found.\n");
+        return;
     }
 
+    set_vec4(shader, "color", blue);
+
+    cursor_scale :: 0.5;
+    scale := make_scale_matrix4(Vector3.{cursor_scale, cursor_scale, cursor_scale});
+
+    rotating    := cast(float32)get_time() * 2;
+    oscillating := sin(cast(float32)get_time() * 2) * 0.5;
+    orientation : Quaternion;
+    set_from_axis_and_angle(*orientation, 0, 1, 0, rotating);
+    rotation := rotation_matrix(Matrix4, orientation);
+
+    position := get_world_space_center_of_a_tile(square) + Vector3.{y=3} + Vector3.{y=oscillating};
+    translation := make_translation_matrix4(position);
+    model := translation * rotation * scale;
+    set_mat4(shader, "model", model);
+
+    draw_skinned_mesh(mesh, .[]);
 }

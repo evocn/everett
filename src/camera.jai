@@ -5,7 +5,7 @@
 
 camera : struct
 {
-	FLY_SPEED :: 1.0;
+	FLY_SPEED :: 4.0;
 	ROTATION_SPEED :: 0.3;
 	ROTATION_SMOOTHING :: 0.3;
 

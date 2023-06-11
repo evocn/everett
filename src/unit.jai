@@ -3,19 +3,80 @@
 // Alex Hartford
 // June 2023
 
-// Choices:
-// Entities that are units can just have the Unit struct attached.
-// Entities that are units can be units.
-
-// To be honest, I don't have enough information to judge which will be best
-// long-term, but for now I'll go with #2.
-
 Unit :: struct {
     name : string;
+
+    mesh_name : string;
 
     direction : Direction;
     using square : Square;
 
-    mesh_name : string;
-    mesh : *Skinned_Mesh;
+    movement : int = 3;
 }
+
+//
+//
+
+accessible_squares_from_position :: (using map : Map, origin : Square, max: int) -> [..] Square
+{
+    accessible: [..] Square;
+
+    costs : [grid_width][grid_height] int;
+    // This currently just fills the grid with giant integers, so our costs start high for the algorithm.
+    memset(*costs, 1, grid_width * grid_height * size_of(int));
+
+    rows := int.[-1,  0,  1,  0];
+    cols := int.[ 0,  1,  0, -1];
+
+    unexplored : [..] Square;
+    array_add(*unexplored, origin);
+    costs[origin.col][origin.row] = 0;
+
+    while unexplored {
+        using current_square := pop(*unexplored);
+        array_add(*accessible, current_square);
+
+        for i : 0..3 {
+            new_square := Square.{col + cols[i], row + rows[i]};
+            if !on_grid(new_square) then continue;
+
+            new_cost := costs[col][row] + 1;
+            if new_cost < costs[new_square.col][new_square.row] {
+                costs[new_square.col][new_square.row] = new_cost;
+
+                if new_cost <= max
+                    array_add(*unexplored, new_square);
+            }
+        }
+    }
+
+    return accessible;
+}
+
+
+/*
+// Finds the nearest unit to the cursor, based on the given predicate expression.
+Unit *FindNearest(const Tilemap &map, const position &origin, 
+                  bool predicate(const Unit &), bool is_ally)
+{
+    int minDistance = 100;
+    int distance = 0;
+    Unit *result = nullptr;
+    for(int col = 0; col < map.width; ++col)
+    {
+        for(int row = 0; row < map.height; ++row)
+        {
+            if(map.tiles[col][row].occupant && predicate(*map.tiles[col][row].occupant))
+            {
+                distance = GetPath(map, origin, position(col, row), is_ally).size();
+                if(distance < minDistance)
+                {
+                    result = map.tiles[col][row].occupant;
+                    minDistance = distance;
+                }
+            }
+        }
+    }
+    return result;
+}
+*/

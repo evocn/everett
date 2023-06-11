@@ -12,9 +12,9 @@ save_units :: (units : [..] *Unit, filename : string) {
     write_entire_file(tprint("%/%", units_path, filename), serialized);
 }
 
-load_units :: (units: *[..] *Unit, meshes : Table(string, *Skinned_Mesh), filename : string) {
+load_units :: (units: *[..] *Unit, filename : string) {
     print("Loading %\n", filename);
-    success := deserialize(units, meshes, tprint("%/%", units_path, filename));
+    success := deserialize(units, tprint("%/%", units_path, filename));
     assert(success, "Unable to load file %\n", filename);
 }
 
@@ -44,7 +44,7 @@ serialize :: (units : [..] *Unit) -> string {
 // serialization files, most likely by refusing to parse them, and returning no
 // entities. This will reduce the chance that we'll autosave or accidentally manual-save a wonky file.
 // I want this to be idiot-proof, and for me to never have to worry about giving the engine to a designer.
-deserialize :: (units: *[..] *Unit, meshes : Table(string, *Skinned_Mesh), full_path : string) -> bool {
+deserialize :: (units: *[..] *Unit, full_path : string) -> bool {
     array_reset(units);
 
 	handler : Text_File_Handler;
@@ -73,15 +73,6 @@ deserialize :: (units: *[..] *Unit, meshes : Table(string, *Skinned_Mesh), full_
         new_unit.mesh_name, ok = parse_string(*handler);
 
         array_add(units, new_unit);
-    }
-
-    for <<units {
-        found_mesh : bool;
-        it.mesh, found_mesh = table_find(*meshes, it.mesh_name);
-        if !found_mesh {
-            log_error("Mesh not found: %.", it.mesh_name);
-            it.mesh = null;
-        }
     }
 
     return true;

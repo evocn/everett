@@ -8,6 +8,13 @@ Square :: struct {
     row : int;
 }
 
+operator == :: (a: Square, b: Square) -> bool {
+    return a.col == b.col && a.row == b.row;
+}
+// @NOTE: This is a method of telling a module about something from my namespace.
+// In this case, I'm telling Basic about my ==, so that I can use array_find with squares.
+#poke_name Basic operator==;
+
 Direction :: enum {
     NORTH;
     SOUTH;
@@ -28,6 +35,17 @@ Tile :: struct {
     tile_kind : Tile_Kind;
 }
 
+is_impassible :: (using tile: Tile) -> bool {
+    if tile_kind == .HOLE
+    {
+        return true;
+    }
+    return false;
+}
+
+//
+//
+
 grid_width  :: 11;
 grid_height :: 11;
 Map :: struct {
@@ -36,8 +54,6 @@ Map :: struct {
     tiles: [grid_width * grid_height] Tile;
 
     occupancy : [grid_width][grid_height] *Unit;
-
-    cube_mesh : *Skinned_Mesh;
 }
 
 get_occupant :: (using map: Map, using square: Square) -> *Unit {

@@ -13,4 +13,4 @@ yellow :: Vector4.{1, .9, .43, 1};
 white  :: Vector4.{.97, 1, .97, 1};
 blue   :: Vector4.{.31, .80, .77, 1};
 black  :: Vector4.{.16, .18, .21, 1};
-green  :: Vector4.{.98, 1, .61, 1};
+green  :: Vector4.{0, .98, .61, 1};

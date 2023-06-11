@@ -11,6 +11,12 @@ window_height : s32 = 600;
 
 running : bool;
 
+// @TODO: This should be a bucket array.
+meshes : Table(string, *Skinned_Mesh);
+
+// @TODO: We should probably keep primitives like this one that we'll draw a lot in a structure together.
+quad : Quad;
+
 //
 //
 
@@ -81,12 +87,13 @@ main :: () {
     render_context.animation_shader = make_shader("anim.vs", "main.fs");
 
     // Meshes
-    // @TODO: This should be a bucket array.
-    meshes : Table(string, *Skinned_Mesh);
     table_add(*meshes, "mesh_bird", new_skinned_mesh("bird.mesh"));
     table_add(*meshes, "mesh_cube", new_skinned_mesh("cube.mesh"));
     table_add(*meshes, "mesh_sphere", new_skinned_mesh("sphere.mesh"));
     table_add(*meshes, "mesh_mannequin", new_skinned_mesh("mannequin.mesh"));
+
+    // Primitives
+    init_quad_rendering_objects(*quad);
 
     /*
     // Animations
@@ -104,33 +111,17 @@ main :: () {
     pose = make_pose_for_skeleton(*mesh.skeleton);
     */
 
-    // Map
     map : Map;
-    found_mesh : bool;
-    map.cube_mesh, found_mesh = table_find(*meshes, "mesh_cube");
-    if !found_mesh {
-        log_error("Cube Mesh for tiles not found.\n");
-        map.cube_mesh = null;
-    }
     load_grid(*map, "level1.map");
 
-    // Cursor
-    cursor.mesh, found_mesh = table_find(*meshes, "mesh_cube");
-    if !found_mesh {
-        log_error("Mesh for cursor indicator not found.\n");
-        cursor.mesh = null;
-    }
-
-    // Units... @TODO: Serialize!
     units : [..] *Unit;
-    load_units(*units, meshes, program_state.current_level_name);
+    load_units(*units, program_state.current_level_name);
     for units {
         occupy(*map, it.square, it);
     }
 
     set_camera();
 
-    // @TODO: Put this stuff in settings? Its own place?
     autosave_interval := 60.0; // seconds
     next_autosave     := autosave_interval;
 
@@ -158,8 +149,10 @@ main :: () {
         update_flying_camera(dt);
 
         // Simulate
-        if !program_state.paused {
-            update_cursor(*map);
+        if program_state.mode == .GAME {
+            if !program_state.paused {
+                update_cursor(*map);
+            }
         }
 
         /*
@@ -176,7 +169,7 @@ main :: () {
 
         // Editor
         if program_state.mode == .EDITOR && program_state.camera_mode == .EDITOR {
-            update_and_draw_editor(*units, meshes);
+            update_and_draw_editor(*units);
         }
 
         // Render
@@ -196,17 +189,15 @@ main :: () {
     SDL_Quit();
 }
 
-#import "Basic";
+using Basic :: #import "Basic";
 #import "String";
 #import "File";
-#import "File_Utilities";
 #import "Text_File_Handler";
-#import "System";
+#import "System"; // get_path_of_running_executable()
 #import "Math";
 #import "Hash_Table";
-#import "Hash";
-Reflection :: #import "Reflection";
+Reflection :: #import "Reflection"; // Inspect()
 
 #import "SDL";
-ImGui :: #import "ImGui";
 #import "GL";
+ImGui :: #import "ImGui";

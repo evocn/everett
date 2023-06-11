@@ -3,7 +3,7 @@
 // Alex Hartford
 // June 2023
 
-update_and_draw_editor :: (units : *[..] *Unit, meshes : Table(string, *Skinned_Mesh)) {
+update_and_draw_editor :: (units : *[..] *Unit) {
     io := ImGui.GetIO();
     program_state.framerate = io.Framerate;
 
@@ -13,8 +13,8 @@ update_and_draw_editor :: (units : *[..] *Unit, meshes : Table(string, *Skinned_
     program_state.imgui_capturing_mouse    = io.WantCaptureMouse;
     program_state.imgui_capturing_keyboard = io.WantCaptureKeyboard;
 
-    meshes_display(meshes);
-    units_editor(units, meshes);
+    meshes_display();
+    units_editor(units);
     if editor.selected_unit != -1 {
         unit_editor((<<units)[editor.selected_unit], units);
     }
@@ -60,7 +60,7 @@ unit_editor :: (using unit: *Unit, units : *[..] *Unit) {
     ImGui.End();
 }
 
-units_editor :: (units : *[..] *Unit, meshes : Table(string, *Skinned_Mesh)) {
+units_editor :: (units : *[..] *Unit) {
     ImGui.Begin("Units");
     {
         ImGui.Text("Current level: %", program_state.current_level_name);
@@ -69,7 +69,7 @@ units_editor :: (units : *[..] *Unit, meshes : Table(string, *Skinned_Mesh)) {
         }
         ImGui.SameLine();
         if(ImGui.Button("load")) {
-            load_units(units, meshes, program_state.current_level_name);
+            load_units(units, program_state.current_level_name);
         }
 
         if ImGui.BeginListBox("###420") {
@@ -83,7 +83,7 @@ units_editor :: (units : *[..] *Unit, meshes : Table(string, *Skinned_Mesh)) {
     ImGui.End();
 }
 
-meshes_display :: (meshes : Table(string, *Skinned_Mesh)) {
+meshes_display :: () {
     ImGui.Begin("Meshes");
     {
         if ImGui.BeginListBox("###69") {

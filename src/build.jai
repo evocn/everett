@@ -29,9 +29,9 @@ build :: () {
     add_build_file(tprint("%/init.jai", #filepath), w);
     add_build_file(tprint("%/imgui_init.jai", #filepath), w);
     add_build_file(tprint("%/editor.jai", #filepath), w);
-    add_build_file(tprint("%/inspector.jai", #filepath), w);
     add_build_file(tprint("%/input.jai", #filepath), w);
     add_build_file(tprint("%/camera.jai", #filepath), w);
+    //add_build_file(tprint("%/inspector.jai", #filepath), w);
 
     add_build_file(tprint("%/grid.jai", #filepath), w);
     add_build_file(tprint("%/cursor.jai", #filepath), w);

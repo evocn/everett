@@ -33,6 +33,13 @@ init :: () -> bool {
     //print("GL Version = %\n", to_string(glGetString(GL_VERSION)));
 
     // GL Settings
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  
+    // @TODO: This is not a complete solution. In order to properly do alpha blending...
+    // 1. Draw all the opaque objects.
+    // 2. Sort all the transparent objects by distance to the viewer.
+    // 3. Draw all the transparent object in sorted order.
+
     glDepthMask(GL_TRUE);
     glEnable(GL_DEPTH_TEST); 
     glLineWidth(1);
