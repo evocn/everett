@@ -119,6 +119,7 @@ handle_events :: () {
                 if event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED {
                     window_width  = event.window.data1;
                     window_height = event.window.data2;
+                    aspect_ratio  = window_width / cast(float)window_height;
                 }
 
         }

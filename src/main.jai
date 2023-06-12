@@ -8,6 +8,7 @@ gl_context : *SDL_GLContext;
 
 window_width  : s32 = 1080;
 window_height : s32 = 600;
+aspect_ratio  : float = 1.8;
 
 running : bool;
 
@@ -16,20 +17,14 @@ meshes : Table(string, *Skinned_Mesh);
 
 // @TODO: We should probably keep primitives like this one that we'll draw a lot in a structure together.
 quad : Quad;
+cube : Cube;
 
-//
-//
+// I sort of feel like this can be global, no use polluting function arguments
+// with something we'll only ever have on of.
+// Let's maybe think on this some more though.
+skybox : Skybox;
 
-render_context : struct {
-    directional_light : Directional_Light = .{direction = Vector3.{y=-1}};
-    using shaders : struct {
-        basic_shader     : Shader;
-        texture_shader   : Shader;
-        animation_shader : Shader;
-    }
-}
-
-//
+// Program-Level State
 //
 
 program_state : struct {
@@ -69,7 +64,51 @@ settings : struct {
     default_camera_angles   :: Vector3.{0, 1.0, 0};
 }
 
+// Render-Level State
 //
+
+render_context : struct {
+    directional_light : Directional_Light = .{direction = Vector3.{y=-1}};
+    using shaders : struct {
+        basic_shader     : Shader;
+        screen_shader    : Shader;
+        texture_shader   : Shader;
+        animation_shader : Shader;
+        skybox_shader    : Shader;
+    }
+}
+
+// Game-Level State
+//
+
+Team :: enum {
+    NONE;
+    BLUE;
+    RED;
+    GREEN;
+}
+
+game_state : struct {
+    teams : [..] Team;
+    current_turn_team_index : int;
+}
+
+whose_turn :: () -> Team {
+    using game_state;
+    return teams[current_turn_team_index];
+}
+
+next_turn :: () -> Team {
+    using game_state;
+
+    current_turn_team_index += 1;
+    if current_turn_team_index > teams.count
+        current_turn_team_index = 0;
+
+    return whose_turn();
+}
+
+// Main
 //
 
 main :: () {
@@ -83,8 +122,10 @@ main :: () {
 
     // Shaders
     render_context.basic_shader     = make_shader("basic.vs", "basic.fs");
+    render_context.screen_shader    = make_shader("screen.vs", "basic.fs");
     render_context.texture_shader   = make_shader("texture.vs", "basic.fs");
     render_context.animation_shader = make_shader("anim.vs", "main.fs");
+    render_context.skybox_shader    = make_shader("skybox.vs", "skybox.fs");
 
     // Meshes
     table_add(*meshes, "mesh_bird", new_skinned_mesh("bird.mesh"));
@@ -94,6 +135,13 @@ main :: () {
 
     // Primitives
     init_quad_rendering_objects(*quad);
+    init_cube_rendering_objects(*cube);
+
+    // Rendering Structures
+    // @NOTE: Most of the load time for the engine right now is loading big textures.
+    // For that reason, we're running with super low-res textures here. We probably want to do more research
+    // Into how to do big textures in the first place. My guess: We don't.
+    load_cubemap_textures(*skybox, "512_cartoon_yellow");
 
     /*
     // Animations
@@ -111,6 +159,7 @@ main :: () {
     pose = make_pose_for_skeleton(*mesh.skeleton);
     */
 
+    // Gameplay structures setup
     map : Map;
     load_grid(*map, "level1.map");
 
@@ -119,6 +168,9 @@ main :: () {
     for units {
         occupy(*map, it.square, it);
     }
+
+    array_add(*game_state.teams, .BLUE);
+    array_add(*game_state.teams, .RED);
 
     set_camera();
 
@@ -191,12 +243,14 @@ main :: () {
 
 using Basic :: #import "Basic";
 #import "String";
-#import "File";
-#import "Text_File_Handler";
 #import "System"; // get_path_of_running_executable()
 #import "Math";
 #import "Hash_Table";
 Reflection :: #import "Reflection"; // Inspect()
+
+#import "File";
+#import "Text_File_Handler";
+#import "stb_image";
 
 #import "SDL";
 #import "GL";

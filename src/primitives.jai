@@ -3,14 +3,85 @@
 // Alex Hartford
 // June 2023
 
+// Cube
+//
+
+Cube :: struct {
+    vertices := float.[
+    -1.0,  1.0, -1.0,
+    -1.0, -1.0, -1.0,
+     1.0, -1.0, -1.0,
+     1.0, -1.0, -1.0,
+     1.0,  1.0, -1.0,
+    -1.0,  1.0, -1.0,
+
+    -1.0, -1.0,  1.0,
+    -1.0, -1.0, -1.0,
+    -1.0,  1.0, -1.0,
+    -1.0,  1.0, -1.0,
+    -1.0,  1.0,  1.0,
+    -1.0, -1.0,  1.0,
+
+     1.0, -1.0, -1.0,
+     1.0, -1.0,  1.0,
+     1.0,  1.0,  1.0,
+     1.0,  1.0,  1.0,
+     1.0,  1.0, -1.0,
+     1.0, -1.0, -1.0,
+
+    -1.0, -1.0,  1.0,
+    -1.0,  1.0,  1.0,
+     1.0,  1.0,  1.0,
+     1.0,  1.0,  1.0,
+     1.0, -1.0,  1.0,
+    -1.0, -1.0,  1.0,
+
+    -1.0,  1.0, -1.0,
+     1.0,  1.0, -1.0,
+     1.0,  1.0,  1.0,
+     1.0,  1.0,  1.0,
+    -1.0,  1.0,  1.0,
+    -1.0,  1.0, -1.0,
+
+    -1.0, -1.0, -1.0,
+    -1.0, -1.0,  1.0,
+     1.0, -1.0, -1.0,
+     1.0, -1.0, -1.0,
+    -1.0, -1.0,  1.0,
+     1.0, -1.0,  1.0
+     ];
+    vao, vbo : GLuint;
+}
+
+init_cube_rendering_objects :: (using cube: *Cube) {
+    glGenVertexArrays(1, *vao);
+    glGenBuffers(1, *vbo);
+
+    glBindVertexArray(vao);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, size_of(float) * vertices.count, vertices.data, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * size_of(float), cast(*void)0);
+}
+
+draw_cube :: ()
+{
+    using cube;
+
+	glBindVertexArray(vao);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+}
+
+
 // Quads
 //
 
 Quad :: struct {
-    points := float.[-1, 0, -1,
-                     -1, 0,  1,
-                      1, 0,  1,
-                      1, 0, -1];
+    points := float.[-1, -1, 0,
+                     -1,  1, 0,
+                      1,  1, 0,
+                      1, -1, 0];
     indices:= u32.[0, 1, 2,
                    0, 2, 3];
     vao, vbo, ibo : GLuint;
@@ -36,8 +107,8 @@ init_quad_rendering_objects :: (using quad : *Quad) {
 	glEnableVertexAttribArray(0);
 }
 
-draw_quad :: (using quad: Quad, color: Vector4 = Vector4.{1.0, 1.0, 1.0, 1.0})
-{
+draw_quad :: () {
+    using quad;
 	glBindVertexArray(vao);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);

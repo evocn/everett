@@ -43,21 +43,6 @@ is_impassible :: (using tile: Tile) -> bool {
     return false;
 }
 
-filter_out_impassible :: (squares : *[..] Square, using map: Map) {
-    for <<squares {
-        tile := get_tile(map, it);
-        if is_impassible(tile) remove it;
-    }
-
-}
-
-filter_out_occupied :: (squares : *[..] Square, using map: Map) {
-    for << squares {
-        if get_occupant(map, it) remove it;
-    }
-}
-
-
 //
 //
 
@@ -87,7 +72,7 @@ get_tile :: (using map: Map, using square: Square) -> *Tile {
     return *grid[col][row];
 }
 
-//
+// Grid Methods
 //
 
 on_grid :: (using square : Square) -> bool {
@@ -95,5 +80,24 @@ on_grid :: (using square : Square) -> bool {
 }
 
 manhattan_distance :: (a : Square, b : Square) -> int {
-    return abs(a.col - a.col) + abs(b.row - b.row);
+    return abs(a.col - b.col) + abs(a.row - b.row);
 }
+
+// Filters
+//
+
+filter_out_impassible :: (squares : *[..] Square, using map: Map) {
+    for <<squares {
+        tile := get_tile(map, it);
+        if is_impassible(tile) remove it;
+    }
+
+}
+
+filter_out_occupied :: (squares : *[..] Square, using map: Map) {
+    for << squares {
+        if get_occupant(map, it) remove it;
+    }
+}
+
+

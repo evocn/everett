@@ -6,6 +6,7 @@ June 2023
 FIRST PRIORITIES:
 * Gameplay Code (Almost all of it). We want a working demo ASAP.
 * Actually good, robust serialization.
+* Visualization of directing, so the user knows what is happening.
 * Editor Upgrades
 * OBJ Files
 * Textures
@@ -13,10 +14,6 @@ FIRST PRIORITIES:
 
 # GAMEPLAY
 Port over mechanics from Emblem.
-* Units
-* Grid Movement
-* Cursor State Machine
-* Selection
 * Algorithms for pathing, ranges, ranged attacks, etc.
 
 # ENGINE
@@ -65,9 +62,6 @@ Decide on the look, and plan out which graphics features will be needed.
 
 Seek out meshes...
 
-Skybox
-* So we're not looking at this horseshit all day long.
-
 Particles
 * Instanced Rendering
 
@@ -107,6 +101,8 @@ UI System.
 Menu System.
 
 AI.
+
+Gamepad Support.
 
 Cutscenes.
 

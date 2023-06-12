@@ -9,6 +9,7 @@ render :: (map : Map, units : [..] *Unit)
     glClearColor(0.2, 0.3, 0.3, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    // Draw Game Board
     {
         shader := render_context.animation_shader;
         use_shader(shader);
@@ -39,6 +40,7 @@ render :: (map : Map, units : [..] *Unit)
         draw_cursor(shader);
     }
 
+    // Draw Overlays
     {
         shader := render_context.basic_shader;
         use_shader(shader);
@@ -48,7 +50,56 @@ render :: (map : Map, units : [..] *Unit)
         set_mat4(shader, "view", camera.view_matrix);
 
         draw_squares_overlay(shader, cursor.accessible);
+        draw_squares_overlay(shader, cursor.interactible, color = red);
         draw_square_overlay(shader, cursor.square, color = blue, alpha = 0.8, height_above_stage = 0.1);
+    }
+
+    // Draw Skybox
+    {
+        shader := render_context.skybox_shader;
+        use_shader(shader);
+        defer disable_shaders();
+
+        set_mat4(shader, "projection", camera.projection_matrix);
+        view_matrix_without_translation := make_matrix4(make_matrix3(camera.view_matrix));
+        set_mat4(shader, "view", view_matrix_without_translation);
+        set_mat4(shader, "model", Matrix4_Identity);
+
+        draw_skybox(shader);
+    }
+
+    // Draw UI Elements
+    {
+        shader := render_context.screen_shader;
+        use_shader(shader);
+        defer disable_shaders();
+
+        if whose_turn() == {
+            case .NONE;  set_vec4(shader, "color", black);
+            case .BLUE;  set_vec4(shader, "color", blue);
+            case .RED;   set_vec4(shader, "color", red);
+            case .GREEN; set_vec4(shader, "color", green);
+        }
+
+        orthographic := orthographic_projection_matrix(0, 10.0, 0, 10.0, -1, 1);
+        set_mat4(shader, "projection", orthographic);
+
+        /*
+        // The API I would love to have:
+        size := Vector2.{1.0, 1.0};
+        position := Vector2.{0.5, 0.5};
+
+        // The Problem: It draws from the fucking center...
+
+        scale := make_scale_matrix4(Vector3.{size.x, size.y, 1});
+        translation := make_translation_matrix4(Vector3.{position.x, position.y, 0});
+        model := translation * scale;
+        set_mat4(shader, "model", model);
+        */
+
+        set_mat4(shader, "model", Matrix4_Identity);
+
+        draw_quad();
     }
 }
 
@@ -117,8 +168,10 @@ draw_tiles :: (using map : Map, shader : Shader) {
             }
 
             square := Square.{col, row};
+
             position := get_world_space_center_of_a_tile(square) - Vector3.{y=1};
-            model := make_translation_matrix4(position);
+            translation := make_translation_matrix4(position);
+            model := translation;
             set_mat4(shader, "model", model);
 
             draw_skinned_mesh(cube_mesh, .[]);
@@ -170,10 +223,15 @@ draw_squares_overlay :: (shader : Shader, squares : [..] Square, color := green,
     for squares {
         position := get_world_space_center_of_a_tile(it);
         translation := make_translation_matrix4(position + Vector3.{y=height_above_stage});
-        model := translation;
+
+        orientation : Quaternion;
+        set_from_axis_and_angle(*orientation, 1, 0, 0, PI * 0.5);
+        rotation := rotation_matrix(Matrix4, orientation);
+
+        model := translation * rotation;
 
         set_mat4(shader, "model", model);
-        draw_quad(quad);
+        draw_quad();
     }
 }
 
@@ -182,10 +240,14 @@ draw_square_overlay :: (shader : Shader, square : Square, color := green, alpha 
 
     position := get_world_space_center_of_a_tile(square);
     translation := make_translation_matrix4(position + Vector3.{y=height_above_stage});
-    model := translation;
+
+    orientation : Quaternion;
+    set_from_axis_and_angle(*orientation, 1, 0, 0, PI * 0.5);
+    rotation := rotation_matrix(Matrix4, orientation);
+    model := translation * rotation;
 
     set_mat4(shader, "model", model);
-    draw_quad(quad);
+    draw_quad();
 }
 
 //

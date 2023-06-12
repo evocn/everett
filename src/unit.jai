@@ -3,13 +3,6 @@
 // Alex Hartford
 // June 2023
 
-Team :: enum {
-    NONE;
-    BLUE;
-    RED;
-    GREEN;
-}
-
 Unit :: struct {
     name : string;
 
@@ -27,7 +20,7 @@ Unit :: struct {
 //
 
 // @TODO: Min range too!
-get_interactible_squares_from_position :: (origin : Square, max: int) -> [..] Square
+get_interactible_squares_from_position :: (origin : Square, min := 1, max := 1) -> [..] Square
 {
     interactible: [..] Square;
 
@@ -61,6 +54,11 @@ get_interactible_squares_from_position :: (origin : Square, max: int) -> [..] Sq
                     array_add(*unexplored, new_square);
             }
         }
+    }
+
+    for interactible {
+        if manhattan_distance(it, origin) < min
+            remove it;
     }
 
     return interactible;

@@ -36,6 +36,8 @@ build :: () {
     add_build_file(tprint("%/grid.jai", #filepath), w);
     add_build_file(tprint("%/cursor.jai", #filepath), w);
     add_build_file(tprint("%/unit.jai", #filepath), w);
+    add_build_file(tprint("%/combat.jai", #filepath), w);
+
     add_build_file(tprint("%/serialization.jai", #filepath), w);
 
     add_build_file(tprint("%/mesh.jai", #filepath), w);
@@ -47,8 +49,10 @@ build :: () {
     add_build_file(tprint("%/render.jai", #filepath), w);
     add_build_file(tprint("%/color.jai", #filepath), w);
     add_build_file(tprint("%/light.jai", #filepath), w);
+    add_build_file(tprint("%/skybox.jai", #filepath), w);
 
     add_build_file(tprint("%/shader.jai", #filepath), w);
+    add_build_file(tprint("%/texture.jai", #filepath), w);
 
 	// Set up ctags options
 	ctags: CTags;
