@@ -3,6 +3,10 @@
 // Alex Hartford
 // June 2023
 
+// @NOTE: Most of the load time for the engine right now is loading big textures.
+// For that reason, we're running with super low-res textures here. We probably want to do more research
+// Into how to do big textures in the first place. My guess: We don't.
+
 skybox_path :: "assets/skyboxes";
 
 Skybox :: struct {
@@ -12,7 +16,7 @@ Skybox :: struct {
 
 draw_skybox :: (shader : Shader) {
     glDepthFunc(GL_LEQUAL);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, skybox.id);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, render_context.skybox.id);
     draw_cube();
     glDepthFunc(GL_LESS);
 }

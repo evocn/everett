@@ -33,21 +33,16 @@ load_texture :: (filename : string) -> Texture {
 	cstr_path := temp_c_string(tprint("%/%", textures_path, filename));
 	data := stbi_load(cstr_path, xx *width, xx *height, xx *dim, 4); defer stbi_image_free(data);
 
-	print("loading texture (%): % x % x %\n", filename, width, height, dim);
 	if(!data) {
 		log_error("Failed to load texture %.\n", filename);
         assert(false);
 	}
 	fmt : GLenum;
-	if dim == 1 {
-		fmt = GL_RED;
-		print("fmt = GL_RED\n");
-	} else if dim == 3 || dim == 4 {
-		fmt = GL_RGBA; // TODO ????
-		print("fmt = GL_RGBA\n");
-	} else {
-		print("unknown format\n");
-		exit(1);
+	if dim == 1 then fmt = GL_RED;
+	else if dim == 3 || dim == 4 then fmt = GL_RGBA;
+	else {
+        log_error("Unknown image format: \"%\".\n", dim);
+        return .{};
 	}
 
 	glGenTextures(1, *id);

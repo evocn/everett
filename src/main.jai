@@ -19,10 +19,7 @@ meshes : Table(string, *Skinned_Mesh);
 quad : Quad;
 cube : Cube;
 
-// I sort of feel like this can be global, no use polluting function arguments
-// with something we'll only ever have on of.
-// Let's maybe think on this some more though.
-skybox : Skybox;
+fonts : Table(string, Font);
 
 // Program-Level State
 //
@@ -57,7 +54,7 @@ editor : struct {
 }
 
 settings : struct {
-    autosave  := true;
+    autosave  := false;
     line_mode := false;
 
     default_camera_position :: Vector3.{0, 10, 10};
@@ -71,11 +68,15 @@ render_context : struct {
     directional_light : Directional_Light = .{direction = Vector3.{y=-1}};
     using shaders : struct {
         basic_shader     : Shader;
-        screen_shader    : Shader;
         texture_shader   : Shader;
         animation_shader : Shader;
         skybox_shader    : Shader;
+
+        screen_shader    : Shader;
+        text_shader      : Shader;
     }
+
+    skybox : Skybox;
 }
 
 // Game-Level State
@@ -108,6 +109,8 @@ next_turn :: () -> Team {
     return whose_turn();
 }
 
+texture : Texture;
+
 // Main
 //
 
@@ -122,10 +125,12 @@ main :: () {
 
     // Shaders
     render_context.basic_shader     = make_shader("basic.vs", "basic.fs");
-    render_context.screen_shader    = make_shader("screen.vs", "basic.fs");
     render_context.texture_shader   = make_shader("texture.vs", "basic.fs");
     render_context.animation_shader = make_shader("anim.vs", "main.fs");
     render_context.skybox_shader    = make_shader("skybox.vs", "skybox.fs");
+
+    render_context.screen_shader    = make_shader("screen.vs", "texture.fs");
+    render_context.text_shader      = make_shader("text.vs", "text.fs");
 
     // Meshes
     table_add(*meshes, "mesh_bird", new_skinned_mesh("bird.mesh"));
@@ -137,11 +142,14 @@ main :: () {
     init_quad_rendering_objects(*quad);
     init_cube_rendering_objects(*cube);
 
+    // Fonts
+    table_add(*fonts, "Header", make_font("JosefinSans-Regular.ttf", 48));
+    //table_add(*fonts, "Body",   make_font("OpenSans-BoldItalic.ttf", 22));
+
     // Rendering Structures
-    // @NOTE: Most of the load time for the engine right now is loading big textures.
-    // For that reason, we're running with super low-res textures here. We probably want to do more research
-    // Into how to do big textures in the first place. My guess: We don't.
-    load_cubemap_textures(*skybox, "512_cartoon_yellow");
+    load_cubemap_textures(*render_context.skybox, "512_cartoon_green");
+
+    texture = load_texture("missing.png");
 
     /*
     // Animations
@@ -172,6 +180,7 @@ main :: () {
     array_add(*game_state.teams, .BLUE);
     array_add(*game_state.teams, .RED);
 
+    // The Game Loop
     set_camera();
 
     autosave_interval := 60.0; // seconds
@@ -251,6 +260,7 @@ Reflection :: #import "Reflection"; // Inspect()
 #import "File";
 #import "Text_File_Handler";
 #import "stb_image";
+#import "freetype255";
 
 #import "SDL";
 #import "GL";

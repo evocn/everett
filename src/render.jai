@@ -81,6 +81,7 @@ render :: (map : Map, units : [..] *Unit)
             case .GREEN; set_vec4(shader, "color", green);
         }
 
+        bind(texture, 0);
         orthographic := orthographic_projection_matrix(0, 10.0, 0, 10.0, -1, 1);
         set_mat4(shader, "projection", orthographic);
 
@@ -100,6 +101,18 @@ render :: (map : Map, units : [..] *Unit)
         set_mat4(shader, "model", Matrix4_Identity);
 
         draw_quad();
+    }
+
+    {
+        shader := render_context.text_shader;
+        use_shader(shader);
+        defer disable_shaders();
+
+        orthographic := orthographic_projection_matrix(0, xx window_width, 0, xx window_height, -1, 1);
+        set_mat4(shader, "projection", orthographic);
+
+        font, found := table_find(*fonts, "Header");
+        draw_text(shader, font, "Hello, Sailor!", 200, 500, 1.0);
     }
 }
 

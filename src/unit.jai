@@ -19,7 +19,6 @@ Unit :: struct {
 //
 //
 
-// @TODO: Min range too!
 get_interactible_squares_from_position :: (origin : Square, min := 1, max := 1) -> [..] Square
 {
     interactible: [..] Square;

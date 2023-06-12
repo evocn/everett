@@ -50,6 +50,8 @@ build :: () {
     add_build_file(tprint("%/color.jai", #filepath), w);
     add_build_file(tprint("%/light.jai", #filepath), w);
     add_build_file(tprint("%/skybox.jai", #filepath), w);
+    add_build_file(tprint("%/water.jai", #filepath), w);
+    add_build_file(tprint("%/font.jai", #filepath), w);
 
     add_build_file(tprint("%/shader.jai", #filepath), w);
     add_build_file(tprint("%/texture.jai", #filepath), w);

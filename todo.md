@@ -7,10 +7,16 @@ FIRST PRIORITIES:
 * Gameplay Code (Almost all of it). We want a working demo ASAP.
 * Actually good, robust serialization.
 * Visualization of directing, so the user knows what is happening.
-* Editor Upgrades
+* Raycasting in the editor
+* Command system in the editor
 * OBJ Files
-* Textures
 * Animations
+
+EASY STUFF:
+* Gamepad Support
+* Basic Menu UI for start screen, pause menu, etc.
+* Start out on Audio
+* Texture Catalogue
 
 # GAMEPLAY
 Port over mechanics from Emblem.
@@ -27,15 +33,12 @@ Materials?
 * Look into the pros/cons of having a more particular system like this one.
 
 Textures
-* Load textures from images.
 * Load Obj Files/FBX files for the sake of texture coordinates.
 * Make a nice Texture Catalogue system.
-LOOK TO SIMP FOR A NICE IMPLEMENTATION.
 
 Text
-* Load Fonts (Bitmap maybe?)
+* Load Bitmap Fonts
 * Render Them (Efficiently)
-LOOK TO SIMP FOR A NICE IMPLEMENTATION.
 
 # EDITOR
 * Build everything with Undo/Redo in mind.
@@ -47,7 +50,6 @@ LOOK TO SIMP FOR A NICE IMPLEMENTATION.
   * This constraint means we could probably code em up ourselves.
 * Entity Palette. Maybe defined in a file?
 
-* Texture Catalogue Viewer
 * Animation Viewer
 
 Hotloading

@@ -211,6 +211,8 @@ begin_targeting :: (map : *Map) {
 
     selected_initial_square = square;
     interactible = get_interactible_squares_from_position(square, max = selected.range);
+
+    // We might need to filter out stuff based on the type of attacks later...
     //filter_out_impassible(*interactible, map);
 
     state = .TARGETING;

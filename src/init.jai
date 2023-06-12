@@ -58,7 +58,6 @@ init :: () -> bool {
 	executable_path := path_strip_filename(get_path_of_running_executable());
 	set_working_directory (tprint("%/../", executable_path));
 
-
     // Do more... personal things
     set_my_print_format();
 
